@@ -29,21 +29,29 @@ class WaveletDenoising:
         else:
             gray = image.copy()
         
-        # 小波分解
-        coeffs = pywt.wavedec2(gray, wavelet, level=3)
+        # 转换为float32类型进行处理
+        gray = np.float32(gray)
         
-        # 阈值处理
-        for i in range(1, len(coeffs)):
-            for j in range(len(coeffs[i])):
-                coeffs[i][j] = pywt.threshold(coeffs[i][j], threshold, 'soft')
-        
-        # 小波重构
-        denoised = pywt.waverec2(coeffs, wavelet)
-        
-        # 确保尺寸与原图一致
-        denoised = denoised[:gray.shape[0], :gray.shape[1]]
-        
-        # 转换为uint8类型
-        denoised = np.uint8(denoised)
-        
-        return denoised
+        try:
+            # 小波分解
+            coeffs = pywt.wavedec2(gray, wavelet, level=3)
+            
+            # 阈值处理
+            for i in range(1, len(coeffs)):
+                coeffs[i] = tuple(pywt.threshold(c, threshold, 'soft') for c in coeffs[i])
+            
+            # 小波重构
+            denoised = pywt.waverec2(coeffs, wavelet)
+            
+            # 确保尺寸与原图一致
+            denoised = denoised[:gray.shape[0], :gray.shape[1]]
+            
+            # 归一化并转换为uint8类型
+            denoised = np.clip(denoised, 0, 255)
+            denoised = np.uint8(denoised)
+            
+            return denoised
+        except Exception as e:
+            print(f"小波去噪处理错误: {str(e)}")
+            # 出错时返回原图
+            return np.uint8(gray)
