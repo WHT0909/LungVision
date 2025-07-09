@@ -3,8 +3,9 @@ import sys
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                              QPushButton, QLabel, QFileDialog, QComboBox, 
                              QTabWidget, QScrollArea, QMessageBox, QSlider,
-                             QGroupBox, QGridLayout, QSplitter, QFrame)
-from PyQt5.QtGui import QPixmap, QImage, QPalette, QColor
+                             QGroupBox, QGridLayout, QSplitter, QFrame,
+                             QMenuBar, QMenu, QAction, QToolTip)
+from PyQt5.QtGui import QPixmap, QImage, QPalette, QColor, QIcon, QFont
 from PyQt5.QtCore import Qt, QSize
 import cv2
 import numpy as np
@@ -13,6 +14,10 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib
 matplotlib.rcParams['font.sans-serif'] = ['SimHei']
 matplotlib.rcParams['axes.unicode_minus'] = False
+
+# 导入对话框
+from ui.help_dialog import HelpDialog, AlgorithmInfoDialog
+from ui.welcome_dialog import WelcomeDialog
 
 # 导入算法模块
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -48,7 +53,7 @@ class ImageViewer(QWidget):
         self.layout.addWidget(self.image_label)
         
         # 直方图
-        self.figure = Figure(figsize=(5, 2))
+        self.figure = Figure(figsize=(5, 3))  # 增加高度
         self.canvas = FigureCanvas(self.figure)
         self.layout.addWidget(self.canvas)
         
@@ -83,7 +88,10 @@ class ImageViewer(QWidget):
                 ax.hist(image[:, :, i].ravel(), 256, [0, 256], color=color, alpha=0.5)
         
         ax.set_xlim([0, 256])
-        ax.set_title("直方图")
+        ax.set_title("直方图", fontsize=12, pad=10)  # 增加字体大小和上边距
+        
+        # 调整图表布局，确保所有元素可见
+        self.figure.tight_layout(pad=2.0)
         self.canvas.draw()
 
 class MainWindow(QMainWindow):
@@ -91,6 +99,12 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("LungVision - 胸部X-Ray图像分析系统")
         self.setMinimumSize(1200, 800)
+        
+        # 显示欢迎对话框
+        self.show_welcome_dialog()
+        
+        # 创建菜单栏
+        self.create_menu_bar()
         
         # 设置应用样式
         self.setStyleSheet("""
@@ -255,6 +269,11 @@ class MainWindow(QMainWindow):
         algorithm_label.setStyleSheet("font-weight: bold;")
         enhancement_group_layout.addWidget(algorithm_label)
         
+        # 算法选择区域
+        algo_selection_widget = QWidget()
+        algo_selection_layout = QHBoxLayout(algo_selection_widget)
+        algo_selection_layout.setContentsMargins(0, 0, 0, 0)
+        
         # 算法下拉框
         self.enhancement_combo = QComboBox()
         self.enhancement_combo.addItems([
@@ -265,7 +284,28 @@ class MainWindow(QMainWindow):
             "小波去噪"
         ])
         self.enhancement_combo.currentIndexChanged.connect(self.update_enhancement_params)
-        enhancement_group_layout.addWidget(self.enhancement_combo)
+        algo_selection_layout.addWidget(self.enhancement_combo)
+        
+        # 算法帮助按钮
+        help_button = QPushButton("?")
+        help_button.setFixedSize(25, 25)
+        help_button.setStyleSheet("""
+            QPushButton {
+                background-color: #17a2b8;
+                border-radius: 12px;
+                font-weight: bold;
+                color: white;
+                padding: 0px;
+            }
+            QPushButton:hover {
+                background-color: #138496;
+            }
+        """)
+        help_button.setToolTip("查看当前算法的详细说明")
+        help_button.clicked.connect(lambda: self.show_algorithm_info("enhancement"))
+        algo_selection_layout.addWidget(help_button)
+        
+        enhancement_group_layout.addWidget(algo_selection_widget)
         
         # 算法参数区域
         params_label = QLabel("参数设置:")
@@ -319,6 +359,11 @@ class MainWindow(QMainWindow):
         seg_algorithm_label.setStyleSheet("font-weight: bold;")
         segmentation_group_layout.addWidget(seg_algorithm_label)
         
+        # 算法选择区域
+        seg_algo_selection_widget = QWidget()
+        seg_algo_selection_layout = QHBoxLayout(seg_algo_selection_widget)
+        seg_algo_selection_layout.setContentsMargins(0, 0, 0, 0)
+        
         # 算法下拉框
         self.segmentation_combo = QComboBox()
         self.segmentation_combo.addItems([
@@ -329,7 +374,28 @@ class MainWindow(QMainWindow):
             "U-Net深度学习"
         ])
         self.segmentation_combo.currentIndexChanged.connect(self.update_segmentation_params)
-        segmentation_group_layout.addWidget(self.segmentation_combo)
+        seg_algo_selection_layout.addWidget(self.segmentation_combo)
+        
+        # 算法帮助按钮
+        seg_help_button = QPushButton("?")
+        seg_help_button.setFixedSize(25, 25)
+        seg_help_button.setStyleSheet("""
+            QPushButton {
+                background-color: #17a2b8;
+                border-radius: 12px;
+                font-weight: bold;
+                color: white;
+                padding: 0px;
+            }
+            QPushButton:hover {
+                background-color: #138496;
+            }
+        """)
+        seg_help_button.setToolTip("查看当前算法的详细说明")
+        seg_help_button.clicked.connect(lambda: self.show_algorithm_info("segmentation"))
+        seg_algo_selection_layout.addWidget(seg_help_button)
+        
+        segmentation_group_layout.addWidget(seg_algo_selection_widget)
         
         # 算法参数区域
         seg_params_label = QLabel("参数设置:")
@@ -757,8 +823,9 @@ class MainWindow(QMainWindow):
             # 显示处理后的图像
             self.processed_viewer.set_image(self.processed_image)
             
-            # 启用保存按钮
+            # 启用保存按钮和保存菜单项
             self.save_button.setEnabled(True)
+            self.save_action.setEnabled(True)
             
             self.statusBar().showMessage(f"已应用{self.enhancement_combo.currentText()}增强")
             
@@ -811,8 +878,9 @@ class MainWindow(QMainWindow):
             # 显示处理后的图像
             self.processed_viewer.set_image(self.processed_image)
             
-            # 启用保存按钮
+            # 启用保存按钮和保存菜单项
             self.save_button.setEnabled(True)
+            self.save_action.setEnabled(True)
             
             self.statusBar().showMessage(f"已应用{self.segmentation_combo.currentText()}分割")
             
@@ -844,8 +912,9 @@ class MainWindow(QMainWindow):
             # 清空处理后的图像
             self.processed_viewer.set_image(None)
             self.processed_image = None
-            # 禁用保存按钮
+            # 禁用保存按钮和保存菜单项
             self.save_button.setEnabled(False)
+            self.save_action.setEnabled(False)
             # 重置当前处理状态
             self.current_enhancement = None
             self.current_segmentation = None
@@ -856,3 +925,139 @@ class MainWindow(QMainWindow):
             self.processed_viewer.image_label.clear()
             self.processed_viewer.figure.clear()
             self.processed_viewer.canvas.draw()
+    
+    def create_menu_bar(self):
+        """
+        创建菜单栏
+        """
+        # 创建菜单栏
+        menu_bar = self.menuBar()
+        menu_bar.setStyleSheet("""
+            QMenuBar {
+                background-color: #f8f9fa;
+                border-bottom: 1px solid #ddd;
+            }
+            QMenuBar::item {
+                padding: 5px 10px;
+                background-color: transparent;
+            }
+            QMenuBar::item:selected {
+                background-color: #e9ecef;
+                border-radius: 4px;
+            }
+            QMenu {
+                background-color: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 5px 0px;
+            }
+            QMenu::item {
+                padding: 5px 20px;
+            }
+            QMenu::item:selected {
+                background-color: #007bff;
+                color: white;
+            }
+        """)
+        
+        # 文件菜单
+        file_menu = menu_bar.addMenu("文件")
+        
+        # 加载图像动作
+        load_action = QAction("加载图像", self)
+        load_action.triggered.connect(self.load_image)
+        file_menu.addAction(load_action)
+        
+        # 保存结果动作
+        save_action = QAction("保存结果", self)
+        save_action.triggered.connect(self.save_result)
+        save_action.setEnabled(False)
+        self.save_action = save_action  # 保存引用以便后续启用/禁用
+        file_menu.addAction(save_action)
+        
+        file_menu.addSeparator()
+        
+        # 退出动作
+        exit_action = QAction("退出", self)
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+        
+        # 帮助菜单
+        help_menu = menu_bar.addMenu("帮助")
+        
+        # 查看帮助动作
+        help_action = QAction("查看帮助", self)
+        help_action.triggered.connect(self.show_help)
+        help_menu.addAction(help_action)
+        
+        # 算法说明动作
+        algorithm_info_action = QAction("算法说明", self)
+        algorithm_info_action.triggered.connect(self.show_algorithm_info)
+        help_menu.addAction(algorithm_info_action)
+        
+        help_menu.addSeparator()
+        
+        # 关于动作
+        about_action = QAction("关于", self)
+        about_action.triggered.connect(self.show_about)
+        help_menu.addAction(about_action)
+    
+    def show_help(self):
+        """
+        显示帮助对话框
+        """
+        help_dialog = HelpDialog(self)
+        help_dialog.exec_()
+    
+    def show_algorithm_info(self, algorithm_type=None):
+        """
+        显示当前选择的算法信息
+        
+        参数:
+            algorithm_type: 算法类型，可以是 "enhancement" 或 "segmentation"，
+                          如果为 None，则根据当前选项卡自动判断
+        """
+        # 如果未指定算法类型，则根据当前选项卡判断
+        if algorithm_type is None:
+            if self.control_panel.currentIndex() == 0:  # 图像增强选项卡
+                algorithm_type = "enhancement"
+            else:  # 肺叶分割选项卡
+                algorithm_type = "segmentation"
+        
+        # 根据算法类型获取算法名称
+        if algorithm_type == "enhancement":
+            algorithm_index = self.enhancement_combo.currentIndex()
+            algorithm_name = self.enhancement_combo.currentText()
+        else:  # segmentation
+            algorithm_index = self.segmentation_combo.currentIndex()
+            algorithm_name = self.segmentation_combo.currentText()
+        
+        # 显示算法信息对话框
+        info_dialog = AlgorithmInfoDialog(algorithm_name, algorithm_type, self)
+        info_dialog.exec_()
+    
+    def show_about(self):
+        """
+        显示关于对话框
+        """
+        about_text = """
+        <h2>LungVision - 胸部X-Ray图像分析系统</h2>
+        <p>版本: 1.0.0</p>
+        <p>LungVision是一款专为胸部X-Ray图像分析设计的软件，提供了强大的图像增强和肺叶分割功能。</p>
+        <p>本软件集成了多种图像处理算法，通过直观的用户界面，帮助用户更好地分析和处理胸部X光片，提高诊断效率。</p>
+        <p>© 2023 LungVision 团队</p>
+        """
+        
+        QMessageBox.about(self, "关于 LungVision", about_text)
+    
+    def show_welcome_dialog(self):
+        """
+        显示欢迎对话框
+        """
+        # 检查是否应该显示欢迎对话框
+        # 这里可以添加配置文件检查逻辑，暂时默认显示
+        welcome_dialog = WelcomeDialog(self)
+        welcome_dialog.exec_()
+        
+        # 可以在这里保存用户的选择到配置文件
+        # 例如：是否在启动时显示欢迎对话框
