@@ -12,7 +12,8 @@ class WelcomeDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("欢迎使用 LungVision")
         self.setMinimumSize(700, 500)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        # 设置窗口标志，添加最小化按钮
+        self.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
         
         # 设置对话框图标
         icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "logo.png")
@@ -51,6 +52,9 @@ class WelcomeDialog(QDialog):
         logo_title_layout = QHBoxLayout()
         logo_title_layout.setSpacing(20)  # 增加间距
         
+        # 添加左侧弹性空间
+        logo_title_layout.addStretch(1)
+        
         # Logo
         logo_label = QLabel()
         icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "logo.png")
@@ -68,9 +72,11 @@ class WelcomeDialog(QDialog):
             color: #007bff;
             margin-bottom: 10px;
         """)
-        title_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        title_label.setAlignment(Qt.AlignCenter)
         logo_title_layout.addWidget(title_label)
-        logo_title_layout.addStretch(1)  # 添加弹性空间
+        
+        # 添加右侧弹性空间
+        logo_title_layout.addStretch(1)
         
         layout.addLayout(logo_title_layout)
         
@@ -141,3 +147,10 @@ class WelcomeDialog(QDialog):
         返回是否应该再次显示欢迎对话框
         """
         return not self.show_again_checkbox.isChecked()
+        
+    def closeEvent(self, event):
+        """
+        重写关闭事件，点击关闭按钮时退出程序
+        """
+        import sys
+        sys.exit(0)
