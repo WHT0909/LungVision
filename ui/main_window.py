@@ -990,12 +990,12 @@ class MainWindow(QMainWindow):
         help_action.triggered.connect(self.show_help)
         help_menu.addAction(help_action)
         
-        # 算法说明动作
-        algorithm_info_action = QAction("算法说明", self)
-        algorithm_info_action.triggered.connect(self.show_algorithm_info)
-        help_menu.addAction(algorithm_info_action)
+        # # 算法说明动作
+        # algorithm_info_action = QAction("算法说明", self)
+        # algorithm_info_action.triggered.connect(self.show_algorithm_info)
+        # help_menu.addAction(algorithm_info_action)
         
-        help_menu.addSeparator()
+        # help_menu.addSeparator()
         
         # 关于动作
         about_action = QAction("关于", self)
@@ -1045,7 +1045,7 @@ class MainWindow(QMainWindow):
         <p>版本: 1.0.0</p>
         <p>LungVision是一款专为胸部X-Ray图像分析设计的软件，提供了强大的图像增强和肺叶分割功能。</p>
         <p>本软件集成了多种图像处理算法，通过直观的用户界面，帮助用户更好地分析和处理胸部X光片，提高诊断效率。</p>
-        <p>© 2023 LungVision 团队</p>
+        <p>© 2025 WangHaotian SCU BME</p>
         """
         
         QMessageBox.about(self, "关于 LungVision", about_text)

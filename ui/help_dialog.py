@@ -24,8 +24,65 @@ class HelpDialog(QDialog):
                 border: 1px solid #ddd;
                 border-radius: 4px;
                 background-color: white;
-                padding: 10px;
+                padding: 15px;
                 font-size: 14px;
+                min-height: 450px;
+                line-height: 1.6;
+                color: #333333;
+            }
+            QTextBrowser p {
+                margin-top: 8px;
+                margin-bottom: 8px;
+            }
+            QTextBrowser h1 {
+                margin-top: 20px;
+                margin-bottom: 15px;
+                color: #1a73e8;
+                font-size: 22px;
+            }
+            QTextBrowser h2 {
+                margin-top: 18px;
+                margin-bottom: 12px;
+                color: #1967d2;
+                font-size: 18px;
+            }
+            QTextBrowser h3 {
+                margin-top: 16px;
+                margin-bottom: 10px;
+                color: #185abc;
+                font-size: 16px;
+            }
+            QTextBrowser li {
+                margin-top: 4px;
+                margin-bottom: 4px;
+                padding-left: 5px;
+            }
+            QTextBrowser ul, QTextBrowser ol {
+                margin-top: 8px;
+                margin-bottom: 8px;
+                padding-left: 20px;
+            }
+            QTextBrowser pre {
+                background-color: #f5f7f9;
+                border: 1px solid #e1e4e8;
+                border-radius: 4px;
+                padding: 12px;
+                margin: 10px 0;
+                font-family: Consolas, Monaco, 'Courier New', monospace;
+                overflow-x: auto;
+            }
+            QTextBrowser table {
+                border-collapse: collapse;
+                margin: 15px 0;
+                width: 100%;
+            }
+            QTextBrowser th, QTextBrowser td {
+                border: 1px solid #ddd;
+                padding: 8px 12px;
+            }
+            QTextBrowser th {
+                background-color: #f2f2f2;
+                font-weight: bold;
             }
             QTreeWidget {
                 border: 1px solid #ddd;
@@ -56,32 +113,33 @@ class HelpDialog(QDialog):
         # 主布局
         layout = QVBoxLayout(self)
         
-        # 标题
+        # 标题 - 压缩标题空间
         title_label = QLabel("LungVision 帮助文档")
         title_label.setStyleSheet("""
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #212529;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            padding: 2px;
         """)
         title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_label)
         
-        # 分割线
+        # 分割线 - 减少分割线占用空间
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
         line.setFrameShadow(QFrame.Sunken)
-        line.setStyleSheet("margin-bottom: 10px;")
+        line.setStyleSheet("margin-bottom: 5px; margin-top: 0px;")
         layout.addWidget(line)
         
         # 创建分割器
         splitter = QSplitter(Qt.Horizontal)
         
-        # 左侧：目录树
+        # 左侧：目录树 - 减小目录树宽度
         self.tree_widget = QTreeWidget()
         self.tree_widget.setHeaderLabel("目录")
-        self.tree_widget.setMinimumWidth(200)
-        self.tree_widget.setMaximumWidth(300)
+        self.tree_widget.setMinimumWidth(180)
+        self.tree_widget.setMaximumWidth(250)
         self.populate_tree()
         splitter.addWidget(self.tree_widget)
         
@@ -91,9 +149,13 @@ class HelpDialog(QDialog):
         self.text_browser.setSearchPaths([os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs")])
         splitter.addWidget(self.text_browser)
         
-        # 设置分割器比例
-        splitter.setSizes([250, 650])
+        # 设置分割器比例 - 扩大内容区域
+        splitter.setSizes([200, 700])
         layout.addWidget(splitter)
+        
+        # 设置分割器伸缩因子，使内容区域获得更多空间
+        splitter.setStretchFactor(0, 1)  # 目录树
+        splitter.setStretchFactor(1, 4)  # 内容区域
         
         # 底部按钮
         button_layout = QHBoxLayout()
@@ -150,6 +212,24 @@ class HelpDialog(QDialog):
         for algo in seg_algorithms:
             item = QTreeWidgetItem(segmentation_item, [algo["name"]])
             item.setData(0, Qt.UserRole, "segmentation_algorithms.md#" + algo["anchor"])
+        
+        # 常见问题
+        faq_item = QTreeWidgetItem(self.tree_widget, ["常见问题"])
+        faq_item.setData(0, Qt.UserRole, "faq.md")
+        
+        # 常见问题子项
+        faq_sections = [
+            {"name": "软件使用方法", "anchor": "软件使用方法"},
+            {"name": "图像加载问题", "anchor": "图像加载问题"},
+            {"name": "图像增强问题", "anchor": "图像增强问题"},
+            {"name": "肺叶分割问题", "anchor": "肺叶分割问题"},
+            {"name": "其他问题", "anchor": "其他问题"},
+            {"name": "性能优化建议", "anchor": "性能优化建议"}
+        ]
+        
+        for section in faq_sections:
+            item = QTreeWidgetItem(faq_item, [section["name"]])
+            item.setData(0, Qt.UserRole, f"faq.md#{section['anchor']}")
         
         # 展开所有项
         self.tree_widget.expandAll()
