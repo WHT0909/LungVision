@@ -676,11 +676,44 @@ class MainWindow(QMainWindow):
             form_layout.addWidget(self.threshold_type_combo, row, 1, 1, 2)
             
         elif index == 1:  # 区域生长
-            # 添加种子点选择说明
-            seed_label = QLabel("请在处理后的图像上点击选择种子点")
-            seed_label.setAlignment(Qt.AlignCenter)
-            seed_label.setStyleSheet("font-weight: bold; color: #007bff;")
-            form_layout.addWidget(seed_label, row, 0, 1, 3)
+            # 添加种子点X坐标输入
+            seed_x_label = QLabel("种子点X坐标:")
+            self.seed_x_slider = QSlider(Qt.Horizontal)
+            self.seed_x_slider.setRange(0, 100)
+            self.seed_x_slider.setValue(50)
+            self.seed_x_value = QLabel("50%")
+            self.seed_x_value.setMinimumWidth(40)
+            self.seed_x_value.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            self.seed_x_slider.valueChanged.connect(
+                lambda v: self.seed_x_value.setText(f"{v}%")
+            )
+            form_layout.addWidget(seed_x_label, row, 0)
+            form_layout.addWidget(self.seed_x_slider, row, 1)
+            form_layout.addWidget(self.seed_x_value, row, 2)
+            row += 1
+            
+            # 添加种子点Y坐标输入
+            seed_y_label = QLabel("种子点Y坐标:")
+            self.seed_y_slider = QSlider(Qt.Horizontal)
+            self.seed_y_slider.setRange(0, 100)
+            self.seed_y_slider.setValue(50)
+            self.seed_y_value = QLabel("50%")
+            self.seed_y_value.setMinimumWidth(40)
+            self.seed_y_value.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            self.seed_y_slider.valueChanged.connect(
+                lambda v: self.seed_y_value.setText(f"{v}%")
+            )
+            form_layout.addWidget(seed_y_label, row, 0)
+            form_layout.addWidget(self.seed_y_slider, row, 1)
+            form_layout.addWidget(self.seed_y_value, row, 2)
+            row += 1
+            
+            # 添加种子点坐标说明
+            seed_info_label = QLabel("种子点坐标示例: 图像中心(50%, 50%)，左上角(0%, 0%)，右下角(100%, 100%)")
+            seed_info_label.setAlignment(Qt.AlignCenter)
+            seed_info_label.setStyleSheet("font-style: italic; color: #6c757d; font-size: 11px;")
+            seed_info_label.setWordWrap(True)
+            form_layout.addWidget(seed_info_label, row, 0, 1, 3)
             row += 1
             
             # 添加阈值参数
@@ -854,9 +887,17 @@ class MainWindow(QMainWindow):
                 threshold_type = self.threshold_type_combo.currentIndex()
                 params = {"threshold": threshold, "threshold_type": threshold_type}
             elif index == 1:  # 区域生长
-                # 使用图像中心作为种子点
+                # 使用用户输入的种子点坐标
                 h, w = input_image.shape[:2]
-                seed_point = (w // 2, h // 2)
+                # 将百分比转换为实际坐标
+                seed_x_percent = self.seed_x_slider.value() / 100.0
+                seed_y_percent = self.seed_y_slider.value() / 100.0
+                seed_x = int(w * seed_x_percent)
+                seed_y = int(h * seed_y_percent)
+                # 确保坐标在图像范围内
+                seed_x = max(0, min(seed_x, w - 1))
+                seed_y = max(0, min(seed_y, h - 1))
+                seed_point = (seed_x, seed_y)
                 threshold = self.region_threshold_slider.value()
                 params = {"seed_point": seed_point, "threshold": threshold}
             elif index == 2:  # 分水岭算法
