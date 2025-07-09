@@ -100,6 +100,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("LungVision - 胸部X-Ray图像分析系统")
         self.setMinimumSize(1200, 800)
         
+        # 设置应用图标
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "logo.png")
+        self.setWindowIcon(QIcon(icon_path))
+        
         # 显示欢迎对话框
         self.show_welcome_dialog()
         
@@ -1081,15 +1085,105 @@ class MainWindow(QMainWindow):
         """
         显示关于对话框
         """
-        about_text = """
-        <h2>LungVision - 胸部X-Ray图像分析系统</h2>
-        <p>版本: 1.0.0</p>
+        # 创建自定义关于对话框
+        from PyQt5.QtWidgets import QDialog
+        about_dialog = QDialog(self)
+        about_dialog.setWindowTitle("关于 LungVision")
+        about_dialog.setMinimumSize(500, 400)
+        
+        # 设置对话框图标
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "logo.png")
+        about_dialog.setWindowIcon(QIcon(icon_path))
+        
+        # 设置对话框样式
+        about_dialog.setStyleSheet("""
+            QDialog {
+                background-color: #f8f9fa;
+            }
+            QLabel {
+                color: #212529;
+            }
+            QPushButton {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #0069d9;
+            }
+        """)
+        
+        # 主布局
+        layout = QVBoxLayout(about_dialog)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+        
+        # Logo和标题区域
+        logo_title_layout = QHBoxLayout()
+        
+        # Logo
+        logo_label = QLabel()
+        logo_pixmap = QPixmap(icon_path)
+        logo_label.setPixmap(logo_pixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        logo_label.setAlignment(Qt.AlignCenter)
+        logo_title_layout.addWidget(logo_label)
+        
+        # 标题和版本信息
+        title_version_layout = QVBoxLayout()
+        
+        title_label = QLabel("LungVision")
+        title_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #007bff;")
+        title_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        title_version_layout.addWidget(title_label)
+        
+        subtitle_label = QLabel("胸部X-Ray图像分析系统")
+        subtitle_label.setStyleSheet("font-size: 16px; color: #6c757d;")
+        subtitle_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        title_version_layout.addWidget(subtitle_label)
+        
+        version_label = QLabel("版本: 1.0.0")
+        version_label.setStyleSheet("font-size: 14px; color: #6c757d;")
+        version_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        title_version_layout.addWidget(version_label)
+        
+        logo_title_layout.addLayout(title_version_layout)
+        layout.addLayout(logo_title_layout)
+        
+        # 分割线
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        layout.addWidget(line)
+        
+        # 描述文本
+        description_label = QLabel()
+        description_label.setWordWrap(True)
+        description_label.setStyleSheet("font-size: 14px; line-height: 1.5;")
+        description_label.setText("""
         <p>LungVision是一款专为胸部X-Ray图像分析设计的软件，提供了强大的图像增强和肺叶分割功能。</p>
         <p>本软件集成了多种图像处理算法，通过直观的用户界面，帮助用户更好地分析和处理胸部X光片，提高诊断效率。</p>
         <p>© 2025 WangHaotian SCU BME</p>
-        """
+        """)
+        layout.addWidget(description_label)
         
-        QMessageBox.about(self, "关于 LungVision", about_text)
+        layout.addStretch()
+        
+        # 底部按钮
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        
+        close_button = QPushButton("关闭")
+        close_button.setMinimumWidth(100)
+        close_button.clicked.connect(about_dialog.accept)
+        button_layout.addWidget(close_button)
+        
+        layout.addLayout(button_layout)
+        
+        # 显示对话框
+        about_dialog.exec_()
     
     def show_welcome_dialog(self):
         """

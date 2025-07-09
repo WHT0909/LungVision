@@ -15,6 +15,10 @@ class HelpDialog(QDialog):
         self.setWindowTitle("LungVision 帮助")
         self.setMinimumSize(900, 600)
         
+        # 设置对话框图标
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "logo.png")
+        self.setWindowIcon(QIcon(icon_path))
+        
         # 设置对话框样式
         self.setStyleSheet("""
             QDialog {
@@ -256,6 +260,10 @@ class AlgorithmInfoDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle(f"{algorithm_name} - 算法说明")
         self.setMinimumSize(600, 400)
+        
+        # 设置对话框图标
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "logo.png")
+        self.setWindowIcon(QIcon(icon_path))
         
         # 设置对话框样式
         self.setStyleSheet("""

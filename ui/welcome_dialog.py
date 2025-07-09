@@ -14,6 +14,10 @@ class WelcomeDialog(QDialog):
         self.setMinimumSize(700, 500)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         
+        # 设置对话框图标
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "logo.png")
+        self.setWindowIcon(QIcon(icon_path))
+        
         # 设置对话框样式
         self.setStyleSheet("""
             QDialog {
@@ -43,6 +47,19 @@ class WelcomeDialog(QDialog):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(15)
         
+        # Logo和标题区域
+        logo_title_layout = QHBoxLayout()
+        logo_title_layout.setSpacing(20)  # 增加间距
+        
+        # Logo
+        logo_label = QLabel()
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "logo.png")
+        logo_pixmap = QPixmap(icon_path)
+        logo_label.setPixmap(logo_pixmap.scaled(80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        logo_label.setAlignment(Qt.AlignCenter)
+        logo_label.setFixedSize(100, 80)  # 固定大小
+        logo_title_layout.addWidget(logo_label)
+        
         # 标题
         title_label = QLabel("欢迎使用 LungVision")
         title_label.setStyleSheet("""
@@ -51,8 +68,11 @@ class WelcomeDialog(QDialog):
             color: #007bff;
             margin-bottom: 10px;
         """)
-        title_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title_label)
+        title_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        logo_title_layout.addWidget(title_label)
+        logo_title_layout.addStretch(1)  # 添加弹性空间
+        
+        layout.addLayout(logo_title_layout)
         
         # 副标题
         subtitle_label = QLabel("胸部X-Ray图像分析系统")
