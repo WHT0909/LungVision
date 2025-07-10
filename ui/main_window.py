@@ -373,7 +373,7 @@ class MainWindow(QMainWindow):
         self.segmentation_combo.addItems([
             "阈值分割",
             "区域生长",
-            "分水岭算法",
+            "分水岭分割",
             "主动轮廓",
             "U-Net深度学习"
         ])
