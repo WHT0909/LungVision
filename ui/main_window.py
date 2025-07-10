@@ -798,6 +798,20 @@ class MainWindow(QMainWindow):
             form_layout.addWidget(beta_label, row, 0)
             form_layout.addWidget(self.contour_beta_slider, row, 1)
             form_layout.addWidget(self.contour_beta_value, row, 2)
+            row += 1
+            
+            # 添加手动选择初始轮廓选项
+            from PyQt5.QtWidgets import QCheckBox
+            manual_init_widget = QWidget()
+            manual_init_layout = QHBoxLayout(manual_init_widget)
+            manual_init_layout.setContentsMargins(0, 0, 0, 0)
+            
+            self.manual_init_checkbox = QCheckBox("手动选择初始轮廓")
+            self.manual_init_checkbox.setChecked(True)
+            self.manual_init_checkbox.setToolTip("启用后，可以手动选择初始轮廓点，适用于肺叶不在图像中心的情况")
+            manual_init_layout.addWidget(self.manual_init_checkbox)
+            
+            form_layout.addWidget(manual_init_widget, row, 0, 1, 3)
             
         elif index == 4:  # U-Net深度学习
             # 添加模型选择
@@ -911,7 +925,8 @@ class MainWindow(QMainWindow):
                 iterations = self.contour_iterations_slider.value()
                 alpha = self.contour_alpha_slider.value() / 100.0
                 beta = self.contour_beta_slider.value() / 100.0
-                params = {"iterations": iterations, "alpha": alpha, "beta": beta}
+                manual_init = self.manual_init_checkbox.isChecked()
+                params = {"iterations": iterations, "alpha": alpha, "beta": beta, "manual_init": manual_init}
             elif index == 4:  # U-Net深度学习
                 model_type = self.unet_model_combo.currentIndex()
                 confidence = self.unet_confidence_slider.value() / 100.0
